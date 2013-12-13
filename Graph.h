@@ -32,8 +32,10 @@ class Graph{
 		bool empty();
 		//Add Edge
 		void addEdge(std::string v1, std::string v2, int weight);
+		void printEdges();
 		//Add Vertex
 		void addVertex(std::string name, float val);
+		void printVertices();
 		//Count Connected Components
 		int numConnectedComponents();
 		//Tree Check
@@ -42,7 +44,7 @@ class Graph{
 		void minWeightComponent(std::string src);
 		//Depth First Search
 		bool DFS(std::string source, std::string val);
-		void recurDFS(int indice, std::string val, bool& found);
+		void recurDFS(int indice, int val, bool& found);
 		//Breadth First Search
 		bool BFS(std::string source, float val);
 		//Closeness

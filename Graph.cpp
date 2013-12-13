@@ -8,11 +8,12 @@
 using namespace std;
 
 Graph::Graph() {
-
+	vCount = 0;
+	edgeCount = 0;
 }
 
 Graph::~Graph() {
-	for(int i = 0; i < vertices.size(); i++)
+	for(int i = 0; i < vCount; i++)
 		delete vertices[i];
 }
 
@@ -20,7 +21,6 @@ void Graph::readFromFile(string file) {
 	//Setup
 	ifstream inFile;
 	string line;
-	int vCount;
 	
 
 	//Opening and checking input is good;
@@ -73,18 +73,31 @@ void Graph::addEdge(string v1, string v2, int weight) {
 	edgeCount++;
 }
 
+//For testing purposes.
+void Graph::printEdges() {
+	for(int i = 0; i < vCount; ++i) {
+		for(int j = 0; j < vCount; ++j)
+			cout << matrix[i][j] << "\t";
+		cout << endl;
+	}
+}
+
 //Pretty straight forward, just make the object and adjust the matrix accordingly.
 void Graph::addVertex(string name, float val) {
+	
 	Vertex* v = new Vertex({val, name, false, '\0'});
 	vertices.push_back(v);
-	matrix.push_back(vector<int>());
+	matrix.push_back(vector<int>(vCount, 0));
 	for(int i = 0; i < (vCount + 1); ++i) {
-		matrix[matrix.size() - 1].push_back(0);
-		if(i < vCount - 1)
-			matrix[i].push_back(0);
+		matrix[i].push_back(0);
 	}
-	vMap[name] = (vertices.size() - 1);
+	vMap[name] = (vCount);
 	vCount++;
+}
+
+void Graph::printVertices() {
+	for(int i = 0; i < vCount; ++i) 
+		cout << i << ": " << vertices[i]->name << ", " << vertices[i]->value << endl;
 }
 
 
@@ -134,17 +147,23 @@ void Graph::minWeightComponent(string src) {
 
 //Just uses recursion
 bool Graph::DFS(string source, string val) {
-	for(int i = 0; i < vertices.size(); i++)
+	//Setting all latches to false
+	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
-	int i = vMap[source];
+
+	//resolving indice and setting up boolean
+	int i = vMap[source], v = vMap[val];
 	bool found = false;
-	recurDFS(i, val, found);
+	
+	//Starting recursion.
+	recurDFS(i, v, found);
+
 	return found;
 }
 
-void Graph::recurDFS(int indice, string val, bool& found) {
+void Graph::recurDFS(int indice, int val, bool& found) {
 	vertices[indice]->latch = true;
-	if(vertices[indice]->name.compare(val) != 0)
+	if(indice == val)
 		found = true;
 	if(!found) {
 		for(int i = 0; i < vCount; ++i) {
@@ -156,7 +175,7 @@ void Graph::recurDFS(int indice, string val, bool& found) {
 
 bool Graph::BFS(string source, float val) {
 	queue<int> q;
-	for(int i = 0; i < vertices.size(); i++)
+	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
 	int v = vMap[source];
 	q.push(v);
