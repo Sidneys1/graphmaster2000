@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <stack>
 #include <unordered_map>
 
 struct Vertex {
@@ -11,11 +10,35 @@ struct Vertex {
 	char color;
 };
 
-class Graph{
+struct Edge {
+	std::string v1;
+	std::string v2;
+	int weight;
+};
+
+
+//Mock node for if we cheat on the last fucntion
+struct Node {
+	//Vector of paths, basically each vector will hold the integer values of the vertices in an order. It
+	//is two dimensional since multiple paths may have the same values. 
+	std::vector<std::vector<int>> path;
+	//Value of the path
+	float value;
+	//For use if it is placed in a tree.
+	Node* right;
+	Node* left;
+};
+
+class Graph {
 	private:
 		std::vector<std::vector<int>> matrix;
+		std::vector<Edge*> edges;
+		std::unordered_map<std::string, int> eMap;
+
 		std::vector<Vertex*> vertices;
 		std::unordered_map<std::string, int> vMap;
+		Node* head;
+		
 		int vCount;
 		int edgeCount;
 		

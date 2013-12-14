@@ -42,6 +42,9 @@ int main() {
 	*	Result:
 	* 		Failed, both returns were 'Not Partionable!'
 	*	Cause:
+	*
+	* isSubGraph():
+	*	Result:
 	*		
 	*/
 
@@ -123,10 +126,10 @@ int main() {
 	/*******Testing BFS*********/
 	cout << endl;
 
-	cout << (g.BFS("Paris", 18) ? "Found." : "Not Found.") << endl;
+	cout << (g.BFS("Paris", "Geneva") ? "Found." : "Not Found.") << endl;
 	//Should be found
 
-	cout << (g.BFS("Geneva", 500) ? "Found." : "Not Found.") << endl;
+	cout << (g.BFS("Geneva", "Boston") ? "Found." : "Not Found.") << endl;
 	//Should not be found.
 
 	/********Testing Closeness***************/

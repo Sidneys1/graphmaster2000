@@ -10,11 +10,14 @@ using namespace std;
 Graph::Graph() {
 	vCount = 0;
 	edgeCount = 0;
+	head = nullptr;
 }
 
 Graph::~Graph() {
 	for(int i = 0; i < vCount; i++)
 		delete vertices[i];
+	for(int j = 0; j < edgeCount; ++j)
+		delete edges[j];
 }
 
 void Graph::readFromFile(string file) {
@@ -68,6 +71,11 @@ bool Graph::empty() {
 }
 
 void Graph::addEdge(string v1, string v2, int weight) {
+	Edge* e = new Edge({v1, v2, weight});
+	edges.push_back(e);
+	eMap[v1.append(v2)] = edgeCount;
+	eMap[v2.append(v1)] = edgeCount;
+
 	matrix[vMap[v1]][vMap[v2]] = weight;
 	matrix[vMap[v2]][vMap[v1]] = weight;
 	edgeCount++;
@@ -173,17 +181,17 @@ void Graph::recurDFS(int indice, int val, bool& found) {
 	}
 }
 
-bool Graph::BFS(string source, float val) {
+bool Graph::BFS(string source, string val) {
 	queue<int> q;
 	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
-	int v = vMap[source];
+	int v = vMap[source], f = vMap[val];
 	q.push(v);
 	while(!q.empty()) {
 		v = q.front();
 		q.pop();
 		vertices[v]->latch = true;
-		if(vertices[v]->value == val)
+		if(v == f)
 			return true;
 		for(int i = 0; i < vCount; ++i) {
 			if(matrix[v][i] != 0 && !vertices[i]->latch)
@@ -221,10 +229,8 @@ int Graph::closeness(string v1, string v2) {
 
 // Here be dragons
 bool Graph::partitionable() {
-    // If we have three or less vertexes,
-    // the graph is automatically partitionable
-    // (Check this? Maybe I'm thinking of it wrong...)
-    if (vertices.size() <= 3)
+    
+    if (vertices.size() <= 2)
         return true;
     
     // Assign a blank color to all vertexes.
@@ -308,10 +314,45 @@ bool Graph::recurPartitionable(int currIndex, char currColor)
     }
 }
 
-bool Graph::isSubGraph(const Graph& g) {	
-	return false;
+bool Graph::isSubGraph(const Graph& g) {
+	bool sub = true;
+	if(g.vCount > vCount || g.edgeCount > edgeCount)
+		return false;	
+	else {
+
+		//Checking that all the same vertices exist.
+		int i = 0, j = 0;
+		while(sub && i < g.vCount) {
+			if(vMap.find(g.vertices[i]->name) == vMap.end())	//Going to the map and seeing name resolves.
+				sub = false;
+			++i;
+		}
+
+		//Checking all edges if all vertices are in set.
+		while(sub && j < edgeCount) {
+				if(eMap.find(((g.edges[j])->v1).append(g.edges[j]->v2)) == eMap.end())
+					sub = false;
+				++j;
+		}
+	}
+	return sub;
 }
 
+
+//So this is definitely an NP problem. Could cheat and do calculations else where I suppose; or complete it Heuristically.
 void printPathCloseVal(float value) {
-	float cow = value;
+	/*
+	So here's the problem basically. We have a set of points in which repetition may occur and other restrictions are applied.
+	We have to find a subset(s) of this such that the sum of all values is closest to the provided value.
+
+	This will typically be a problem in NP, but we may write a heuristic algorithm that will increase this but may be inaccurate.
+	I have emailed her to see if we can even do this.
+
+	And we could also cheat. My idea is to create a heap/tree or a RB tree. And each time an edge/vertex is added we basically recalculate this
+	NP problem. For each path calculated we create a node that holds the path and then insert it into the tree. And then when we call this function we can just
+	search the tree for closest value. Obviously will have to create this whole tree data structure, but honestly not too hard as long as not a RB tree.
+
+	I have created a mock one of these nodes in the header.
+
+	*/
 }
