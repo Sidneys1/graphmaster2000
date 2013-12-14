@@ -124,8 +124,10 @@ int Graph::numConnectedComponents() {
 		if(!(vertices[i])->latch) {
 		queue<int> q;
 			sets.push_back(vector<int>());
-			sets[sets.size() - 1].insert(i);
-			q.push(i);
+		//	sets[sets.size() - 1].insert(i);
+		//	sets[sets.size()-1];
+      sets[i][sets.size()-1]=i;
+      q.push(i);
 			while(!q.empty()) {
 				k = q.front();
 				q.pop();
@@ -133,7 +135,7 @@ int Graph::numConnectedComponents() {
 				for(int j = 0; j < vCount; ++j) {
 					if(matrix[k][j] != 0 && !vertices[j]->latch) {
 						q.push(j);
-						set[sets.size() - 1].insert(j);
+						sets[j][sets.size() - 1]=j;
 					}
 				}
 			}
@@ -154,8 +156,10 @@ void Graph::minWeightComponent(string src) {
 	//Need to keep track of the used vertices and edges in the graph.
 	vector<int> verts;
 	vector<int> edge;
-	int src = vMap[src], size = 0;
-	//Setting booleans to false.
+	int src2 = vMap[src];
+  int size = 0;
+//	int src= vMap[src], 0;
+  //Setting booleans to false.
 	for(int z = 0; z < vCount; ++z)
 		vertices[z]->latch = false;
 
@@ -177,17 +181,18 @@ void Graph::minWeightComponent(string src) {
 	int count = 0;
 	float weight = 0;
 	while(count < size) {
-		vertices[src]->latch = false;
+		vertices[src2]->latch = false;
 		++count;
 		verts.insert(src);
-		weight += min;
+		//weight += min;
 
 		string e;
 		float min = 100000;
-		for(int i = 0; i < count; ++i) {
+		weight+=min;
+    for(int i = 0; i < count; ++i) {
 			for(int j = 0; j < vCount; ++j) {
 				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && vertices[j]->value < min) {
-					src = j;
+					src2 = j;
 					min = vertices[j]->value;
 					e = (vertices[i]->name).append(vertices[j]->name);
 				}
@@ -237,7 +242,7 @@ void Graph::recurDFS(int indice, int val, bool& found) {
 	}
 }
 
-bool Graph::BFS(string source, string val) {
+bool Graph::BFS(string source, float val) {
 	queue<int> q;
 	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
