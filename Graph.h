@@ -41,6 +41,7 @@ class Graph {
 		
 		int vCount;
 		int edgeCount;
+		std::vector<std::vector<int>> sets;
 		
 	public:
 		//Construct

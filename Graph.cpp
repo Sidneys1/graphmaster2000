@@ -114,17 +114,16 @@ int Graph::numConnectedComponents() {
 	for(int i = 0; i < vertices.size(); i++)
 		vertices[i]->latch = false;
 
-	vector<set<int>> sets;
 	int k;
-
+	sets.clear();
 	//Looping through all the vertices.
 	for(int i = 0; i < vCount; ++i) {
 
 		//If the vertice hasn't been seen, will do a BFS from it and add all nodes to a set.
 		//The code is very similar to BFS.
 		if(!(vertices[i])->latch) {
-			queue<int> q;
-			sets.push_back(set<int>());
+		queue<int> q;
+			sets.push_back(vector<int>());
 			sets[sets.size() - 1].insert(i);
 			q.push(i);
 			while(!q.empty()) {
@@ -132,8 +131,10 @@ int Graph::numConnectedComponents() {
 				q.pop();
 				vertices[k]->latch = true;
 				for(int j = 0; j < vCount; ++j) {
-					if(matrix[k][j] != 0 && !vertices[j]->latch)
+					if(matrix[k][j] != 0 && !vertices[j]->latch) {
 						q.push(j);
+						set[sets.size() - 1].insert(j);
+					}
 				}
 			}
 		}
@@ -150,7 +151,62 @@ bool Graph::tree() {
 }
 
 void Graph::minWeightComponent(string src) {
-	string bogus = src;
+	//Need to keep track of the used vertices and edges in the graph.
+	vector<int> verts;
+	vector<int> edge;
+	int src = vMap[src], size = 0;
+	//Setting booleans to false.
+	for(int z = 0; z < vCount; ++z)
+		vertices[z]->latch = false;
+
+	//Have to fill the components.
+	numConnectedComponents();
+
+	//Getting count of vertices in the component.
+	int y = 0, f = 0;
+	while(f == 0 && y < sets.size()) {
+		for(int x = 0; x < sets[y].size(); ++x) {
+			if(sets[y][x] == 1) {
+				size = sets[y].size();
+				f = 1;
+			}
+		}
+		y++;
+	}
+
+	int count = 0;
+	float weight = 0;
+	while(count < size) {
+		vertices[src]->latch = false;
+		++count;
+		verts.insert(src);
+		weight += min;
+
+		string e;
+		float min = 100000;
+		for(int i = 0; i < count; ++i) {
+			for(int j = 0; j < vCount; ++j) {
+				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && vertices[j]->value < min) {
+					src = j;
+					min = vertices[j]->value;
+					e = (vertices[i]->name).append(vertices[j]->name);
+				}
+			}
+		}
+		edge.insert(eMap[e]);
+	}
+
+	//printing out the graph in format 
+	cout << "{{";
+	for(int t = 0; t < count; ++t) {
+		cout << vertices[verts[t]]->name << ", ";
+	}
+	cout << "}, {";
+	for(int s = 0; s < (count - 1); ++s) {	
+		cout << "(" << edges[e[s]]->v1 << ", " << edges[e[s]]->v2 
+			<< (s == (count - 2) ? ")" : "), ");
+	}
+	cout << "}}" << endl;
 }
 
 //Just uses recursion
