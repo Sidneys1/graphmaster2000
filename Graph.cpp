@@ -2,6 +2,7 @@
 #include <fstream>
 #include <queue>
 #include <sstream>
+#include <stdexcept>
 #include <algorithm>
 #include "Graph.h"
 
@@ -57,7 +58,6 @@ void Graph::readFromFile(string file) {
 				addEdge(v1, v2, weight);
 			}
 		}
-
 	} else {
 		//Error reading, return this statement.
 		cout << "Invalid file: " << file << endl;
@@ -70,10 +70,10 @@ void Graph::writeToFile(string file) {
 	if(outFile.good()) {
 		outFile << vCount << "\n";
 		for(int i = 0; i < vCount; ++i) 
-			cout << vertices[i]->name << ", " << vertices[i]->value << "\n";
+			outFile << vertices[i]->name << ", " << vertices[i]->value << "\n";
 		
 		for(int j = 0; j < edgeCount; ++j) {
-			cout << edges[j]->v1 << ", " << edges[j]->v2 
+			outFile << edges[j]->v1 << ", " << edges[j]->v2 
 				<< ", " << edges[j]->weight << "\n";
 		}
 	} else {
@@ -87,36 +87,32 @@ bool Graph::empty() {
 }
 
 void Graph::addEdge(string v1, string v2, int weight) {
-	if(weight > 0) {
-		if(eMap.find(v1.append(v2)) == eMap.end()) {
+	if(weight > 0 && vMap.find(v1) != vMap.end() //Checkign to make sure it is a valid weight and that both of the vertices exist
+		&& vMap.find(v2) != vMap.end()) {
+		
+		if(eMap.find(v1 + v2) == eMap.end()) { //If the edge already exists, no need for a new one, will jsut update the weight
 			Edge* e = new Edge({v1, v2, weight});
 			edges.push_back(e);
-			eMap[v1.append(v2)] = edgeCount;
-			eMap[v2.append(v1)] = edgeCount;
-
-			int first = vMap[v1];
-			int second = vMap[v2];			
-			
-			matrix[first][second] = weight;
-			matrix[second][first] = weight;
+			eMap[v1 + v2] = edgeCount;
+			eMap[v2 + v1] = edgeCount;
 
 			edgeCount++;
 		} else {
-			int i = eMap[v1.append(v2)];
-			edges[i]->weight = weight;	
+			int i = eMap[v1 + v2];
+			edges[i]->weight = weight;
 		}
+		matrix[vMap[v1]][vMap[v2]] = weight;
+		matrix[vMap[v2]][vMap[v1]] = weight;
 	}
 }
 
-//For testing purposes.
+//For testing purposes.`
 void Graph::printEdges() {
 	for(int i = 0; i < vCount; ++i) {
 		for(int j = 0; j < vCount; ++j)
 			cout << matrix[i][j] << "\t";
 		cout << endl;
 	}
-//	for(auto it = eMap.begin(); it != eMap.end(); ++it) 
-//		cout << " " << it->first << " : " << it->second << endl;
 }
 
 //Pretty straight forward, just make the object and adjust the matrix accordingly.
@@ -226,8 +222,8 @@ void Graph::minWeightComponent(string src) {
 			for(int j = 0; j < vCount; ++j) {
 				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && matrix[verts[i]][j] < min) {
 					base = j;
-					min = matrix[verts[j]][i];
-					e = (vertices[i]->name).append(vertices[j]->name);
+					min = matrix[verts[i]][j];
+					e = (vertices[i]->name) + (vertices[j]->name);
 				}
 			}
 		}
@@ -237,7 +233,7 @@ void Graph::minWeightComponent(string src) {
 	//printing out the graph in format 
 	cout << "{{";
 	for(int t = 0; t < count; ++t) {
-		cout << vertices[verts[t]]->name << ", ";
+		cout << vertices[verts[t]]->name << (t == (count - 1) ? ")" : ", ");
 	}
 	cout << "}, {";
 	for(int s = 0; s < (count - 1); ++s) {	
@@ -424,8 +420,8 @@ bool Graph::isSubGraph(const Graph& g) {
 		}
 
 		//Checking all edges if all vertices are in set.
-		while(sub && j < edgeCount) {
-				if(eMap.find(((g.edges[j])->v1).append(g.edges[j]->v2)) == eMap.end())
+		while(sub && j < g.edgeCount) {
+				if(eMap.find(((g.edges[j])->v1) + (g.edges[j]->v2)) == eMap.end())
 					sub = false;
 				++j;
 		}

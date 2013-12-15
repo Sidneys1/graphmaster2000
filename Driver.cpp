@@ -150,5 +150,52 @@ int main() {
 
 	cout << "\nPrinting edges:" << endl;
 	h.printEdges();
+
+	cout << "\nNumber of connected components: " << h.numConnectedComponents() << endl;
+	//should be 2
+
+	cout << (h.tree() ? "\nIs a tree." : "\nIsn't a tree") << endl;
+	//Should not be a tree.
+
+	cout << endl;
+	h.minWeightComponent("Theta");
+
+	cout << endl;
+	h.minWeightComponent("Epsilon");
+
+	cout << "\nDFS" << endl;
+	cout << (h.DFS("Alpha", "Epsilon") ? "Found." : "Not Found.") << endl;
+	//hould be found.
+
+	cout << (h.DFS("Alpha", "Theta") ? "Found." : "Not Found.") << endl;
+	//Should not be found.
+
+	cout << "\nBFS" << endl;
+	cout << (h.BFS("Epsilon", "Beta") ? "Found." : "Not Found.") << endl;
+	//Should be found.
+
+	cout << (h.BFS("Gamma", "Eta") ? "Found." : "Not Found.") << endl;
+	//Should not be found.
+
+	Graph sub;
+	sub.addVertex("Alpha", 1);
+	sub.addVertex("Beta", 1);
+	sub.addVertex("Gamma", 1);
+	sub.addVertex("Zeta", 1);
+	sub.addVertex("Theta", 1);
+	sub.addEdge("Alpha", "Beta", 1);
+	sub.addEdge("Beta", "Delta", 1);
+	sub.addEdge("Zeta", "Theta", 1);
+
+	cout << (h.isSubGraph(sub) ? "\nIs a sub graph." : "\nIs not a sub graph.") << endl;
+	//Should be a sub graph.
+
+	sub.addEdge("Zeta", "Alpha", 1);
+	cout << (h.isSubGraph(sub) ? "\nIs a sub graph." : "\nIs not a sub graph.") << endl;
+	//should not be.
 	
+	//Witing graph to file same.txt
+	//Writing subgraph to file sub.txt
+	h.writeToFile("same.txt");
+	sub.writeToFile("sub.txt");
 }
