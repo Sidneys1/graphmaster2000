@@ -70,7 +70,7 @@ class Graph {
 		bool DFS(std::string source, std::string val);
 		void recurDFS(int indice, int val, bool& found);
 		//Breadth First Search
-		bool BFS(std::string source, float val);
+		bool BFS(std::string source, std::string val);
 		//Closeness
 		int closeness(std::string v1, std::string v2);
 		//Partition

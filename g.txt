@@ -1,0 +1,17 @@
+8
+Alpha, 1
+Beta, 2
+Delta, 3
+Gamma, 4
+Epsilon, 5
+Zeta, 6
+Eta, 7
+Theta, 8
+Alpha, Beta, 3
+Alpha, Delta, 9
+Delta, Beta, 2
+Delta, Gamma, 11
+Gamma, Epsilon, 21
+Zeta, Eta, 5
+Zeta, Theta, 10
+Theta, Eta, 2

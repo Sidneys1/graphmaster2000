@@ -24,7 +24,7 @@ void Graph::readFromFile(string file) {
 	//Setup
 	ifstream inFile;
 	string line;
-	
+	int count;
 
 	//Opening and checking input is good;
 	inFile.open(file);
@@ -32,7 +32,7 @@ void Graph::readFromFile(string file) {
 		
 		//reading the first line and placing it in 'vCount'
 		getline(inFile, line);
-		stringstream ( line ) >> vCount;
+		stringstream ( line ) >> count;
 	
 		vector<string> input;
 
@@ -40,18 +40,21 @@ void Graph::readFromFile(string file) {
 			input.push_back(line);		
 		inFile.close();
 
-		for(int i = 0; i < vCount; ++i) {
+		for(int i = 0; i < (int)input.size(); ++i) {
 			string name, v1, v2;
 			float value;
 			int weight;
 		
 			stringstream s(input.at(i));
-			if(i < vCount) {
+			if(i < count) {
 				s >> name >> value;
-				addVertex(name.substr(0, name.size() - 1), value);
+				name = name.substr(0, name.size()-1);
+				addVertex(name, value);
 			} else {					
 				s >> v1 >> v2 >> weight;
-				addEdge(v1.substr(0, v1.size() - 1), v2.substr(0, v2.size() - 1), weight);
+				v1 = v1.substr(0, v1.size()-1);
+				v2 = v2.substr(0, v2.size()-1);
+				addEdge(v1, v2, weight);
 			}
 		}
 
@@ -59,11 +62,24 @@ void Graph::readFromFile(string file) {
 		//Error reading, return this statement.
 		cout << "Invalid file: " << file << endl;
 	}
-
 }
 
 void Graph::writeToFile(string file) {
-	string house = file;
+	ofstream outFile;
+	outFile.open(file, ofstream::trunc);
+	if(outFile.good()) {
+		outFile << vCount << "\n";
+		for(int i = 0; i < vCount; ++i) 
+			cout << vertices[i]->name << ", " << vertices[i]->value << "\n";
+		
+		for(int j = 0; j < edgeCount; ++j) {
+			cout << edges[j]->v1 << ", " << edges[j]->v2 
+				<< ", " << edges[j]->weight << "\n";
+		}
+	} else {
+		cout << "Failed to write to file." << endl;
+	}
+	outFile.close();
 }
 
 bool Graph::empty() {
@@ -71,14 +87,25 @@ bool Graph::empty() {
 }
 
 void Graph::addEdge(string v1, string v2, int weight) {
-	Edge* e = new Edge({v1, v2, weight});
-	edges.push_back(e);
-	eMap[v1.append(v2)] = edgeCount;
-	eMap[v2.append(v1)] = edgeCount;
+	if(weight > 0) {
+		if(eMap.find(v1.append(v2)) == eMap.end()) {
+			Edge* e = new Edge({v1, v2, weight});
+			edges.push_back(e);
+			eMap[v1.append(v2)] = edgeCount;
+			eMap[v2.append(v1)] = edgeCount;
 
-	matrix[vMap[v1]][vMap[v2]] = weight;
-	matrix[vMap[v2]][vMap[v1]] = weight;
-	edgeCount++;
+			int first = vMap[v1];
+			int second = vMap[v2];			
+			
+			matrix[first][second] = weight;
+			matrix[second][first] = weight;
+
+			edgeCount++;
+		} else {
+			int i = eMap[v1.append(v2)];
+			edges[i]->weight = weight;	
+		}
+	}
 }
 
 //For testing purposes.
@@ -88,24 +115,35 @@ void Graph::printEdges() {
 			cout << matrix[i][j] << "\t";
 		cout << endl;
 	}
+//	for(auto it = eMap.begin(); it != eMap.end(); ++it) 
+//		cout << " " << it->first << " : " << it->second << endl;
 }
 
 //Pretty straight forward, just make the object and adjust the matrix accordingly.
 void Graph::addVertex(string name, float val) {
-	
-	Vertex* v = new Vertex({val, name, false, '\0'});
-	vertices.push_back(v);
-	matrix.push_back(vector<int>(vCount, 0));
-	for(int i = 0; i < (vCount + 1); ++i) {
-		matrix[i].push_back(0);
+	if(val > 0) {
+		if(vMap.find(name) == vMap.end()) {
+			Vertex* v = new Vertex({val, name, false, '\0'});
+			vertices.push_back(v);
+			matrix.push_back(vector<int>(vCount, 0));
+			for(int i = 0; i < (vCount + 1); ++i) 
+				matrix[i].push_back(0);
+			
+			vMap[name] = vCount;
+			vCount++;
+		} else {
+			int v = vMap[name];
+			vertices[v]->value = val;
+		}
 	}
-	vMap[name] = (vCount);
-	vCount++;
 }
 
 void Graph::printVertices() {
-	for(int i = 0; i < vCount; ++i) 
+	for(int i = 0; i < vCount; ++i)
 		cout << i << ": " << vertices[i]->name << ", " << vertices[i]->value << endl;
+	
+//	for(auto it = vMap.begin(); it != vMap.end(); ++it) 
+//		cout << " " << it->first << " : " << it->second << endl;
 }
 
 
@@ -122,12 +160,11 @@ int Graph::numConnectedComponents() {
 		//If the vertice hasn't been seen, will do a BFS from it and add all nodes to a set.
 		//The code is very similar to BFS.
 		if(!(vertices[i])->latch) {
-		queue<int> q;
+			queue<int> q;
 			sets.push_back(vector<int>());
-		//	sets[sets.size() - 1].insert(i);
-		//	sets[sets.size()-1];
-      sets[i][sets.size()-1]=i;
-      q.push(i);
+		
+			sets[sets.size() - 1].push_back(i);
+			q.push(i);
 			while(!q.empty()) {
 				k = q.front();
 				q.pop();
@@ -135,7 +172,7 @@ int Graph::numConnectedComponents() {
 				for(int j = 0; j < vCount; ++j) {
 					if(matrix[k][j] != 0 && !vertices[j]->latch) {
 						q.push(j);
-						sets[j][sets.size() - 1]=j;
+						sets[sets.size() - 1].push_back(j);
 					}
 				}
 			}
@@ -156,10 +193,9 @@ void Graph::minWeightComponent(string src) {
 	//Need to keep track of the used vertices and edges in the graph.
 	vector<int> verts;
 	vector<int> edge;
-	int src2 = vMap[src];
-  int size = 0;
-//	int src= vMap[src], 0;
-  //Setting booleans to false.
+	int base = vMap[src];
+	int size = 0;
+
 	for(int z = 0; z < vCount; ++z)
 		vertices[z]->latch = false;
 
@@ -170,7 +206,7 @@ void Graph::minWeightComponent(string src) {
 	int y = 0, f = 0;
 	while(f == 0 && y < sets.size()) {
 		for(int x = 0; x < sets[y].size(); ++x) {
-			if(sets[y][x] == 1) {
+			if(sets[y][x] == base) {
 				size = sets[y].size();
 				f = 1;
 			}
@@ -179,26 +215,23 @@ void Graph::minWeightComponent(string src) {
 	}
 
 	int count = 0;
-	float weight = 0;
 	while(count < size) {
-		vertices[src2]->latch = false;
-		++count;
-		verts.insert(src);
-		//weight += min;
+		vertices[base]->latch = true;
+		verts.push_back(base);
+		count++;
 
 		string e;
-		float min = 100000;
-		weight+=min;
-    for(int i = 0; i < count; ++i) {
+		int min = 100000;
+		for(int i = 0; i < count; ++i) {
 			for(int j = 0; j < vCount; ++j) {
-				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && vertices[j]->value < min) {
-					src2 = j;
-					min = vertices[j]->value;
+				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && matrix[verts[i]][j] < min) {
+					base = j;
+					min = matrix[verts[j]][i];
 					e = (vertices[i]->name).append(vertices[j]->name);
 				}
 			}
 		}
-		edge.insert(eMap[e]);
+		edge.push_back(eMap[e]);
 	}
 
 	//printing out the graph in format 
@@ -208,7 +241,7 @@ void Graph::minWeightComponent(string src) {
 	}
 	cout << "}, {";
 	for(int s = 0; s < (count - 1); ++s) {	
-		cout << "(" << edges[e[s]]->v1 << ", " << edges[e[s]]->v2 
+		cout << "(" << edges[edge[s]]->v1 << ", " << edges[edge[s]]->v2 
 			<< (s == (count - 2) ? ")" : "), ");
 	}
 	cout << "}}" << endl;
@@ -242,11 +275,12 @@ void Graph::recurDFS(int indice, int val, bool& found) {
 	}
 }
 
-bool Graph::BFS(string source, float val) {
+bool Graph::BFS(string source, string val) {
 	queue<int> q;
 	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
-	int v = vMap[source], f = vMap[val];
+	int v = vMap[source];
+	int f = vMap[val];
 	q.push(v);
 	while(!q.empty()) {
 		v = q.front();

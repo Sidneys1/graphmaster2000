@@ -136,4 +136,19 @@ int main() {
 	
 	cout << "New York - Geneva: " << g.closeness("New York", "Geneva") << endl;
 	//should return 2, possible error of 3.
+
+
+	/*****************************************************************************************************/
+	//New Round of testing.
+	cout << "/******************************************/" << endl;
+	cout << "Starting testing on graph loaded from file." << endl;
+	Graph h;
+	h.readFromFile("g.txt");
+
+	cout << "\nPrinting vertices:" << endl;
+	h.printVertices();
+
+	cout << "\nPrinting edges:" << endl;
+	h.printEdges();
+	
 }
