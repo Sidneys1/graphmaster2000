@@ -11,7 +11,6 @@ using namespace std;
 Graph::Graph() {
 	vCount = 0;
 	edgeCount = 0;
-	head = nullptr;
 }
 
 Graph::~Graph() {
@@ -124,12 +123,13 @@ void Graph::addVertex(string name, float val) {
 			matrix.push_back(vector<int>(vCount, 0));
 			for(int i = 0; i < (vCount + 1); ++i) 
 				matrix[i].push_back(0);
-			
+			values.push_back(val);
 			vMap[name] = vCount;
 			vCount++;
 		} else {
 			int v = vMap[name];
 			vertices[v]->value = val;
+			values[v] = val;
 		}
 	}
 }
@@ -145,30 +145,30 @@ void Graph::printVertices() {
 
 int Graph::numConnectedComponents() {
 	//Setting the dummy boolean in the structs to false.
-	for(int i = 0; i < vertices.size(); i++)
+	for(int i = 0; i < vCount; i++)
 		vertices[i]->latch = false;
 
-	int k;
+	int k, sSize = 0;
 	sets.clear();
 	//Looping through all the vertices.
 	for(int i = 0; i < vCount; ++i) {
 
 		//If the vertice hasn't been seen, will do a BFS from it and add all nodes to a set.
 		//The code is very similar to BFS.
-		if(!(vertices[i])->latch) {
+		if(!(vertices[i]->latch)) {
 			queue<int> q;
-			sets.push_back(vector<int>());
-		
-			sets[sets.size() - 1].push_back(i);
+			sets.push_back(set<int>());
+			++sSize;
+			sets[sSize-1].insert(i);
 			q.push(i);
 			while(!q.empty()) {
 				k = q.front();
 				q.pop();
 				vertices[k]->latch = true;
 				for(int j = 0; j < vCount; ++j) {
-					if(matrix[k][j] != 0 && !vertices[j]->latch) {
+					if(matrix[k][j] > 0 && (vertices[j]->latch == false)) {
 						q.push(j);
-						sets[sets.size() - 1].push_back(j);
+						sets[sSize-1].insert(j);
 					}
 				}
 			}
@@ -192,42 +192,45 @@ void Graph::minWeightComponent(string src) {
 	int base = vMap[src];
 	int size = 0;
 
-	for(int z = 0; z < vCount; ++z)
-		vertices[z]->latch = false;
-
 	//Have to fill the components.
-	numConnectedComponents();
+	int num = numConnectedComponents();
+
+	for(int z = 0; z < vCount; ++z)
+		(vertices[z])->latch = false;
 
 	//Getting count of vertices in the component.
 	int y = 0, f = 0;
-	while(f == 0 && y < sets.size()) {
-		for(int x = 0; x < sets[y].size(); ++x) {
-			if(sets[y][x] == base) {
-				size = sets[y].size();
-				f = 1;
-			}
+	while(f == 0 && y < num) {
+		if(sets[y].find(base) != sets[y].end()) {
+			size = sets[y].size();
+			f = 1;
 		}
 		y++;
 	}
 
-	int count = 0;
+	int count = 1;
+	vertices[base]->latch = true;
+	verts.push_back(base);
 	while(count < size) {
-		vertices[base]->latch = true;
-		verts.push_back(base);
-		count++;
 
 		string e;
 		int min = 100000;
 		for(int i = 0; i < count; ++i) {
 			for(int j = 0; j < vCount; ++j) {
-				if(matrix[verts[i]][j] > 0 && !vertices[j]->latch && matrix[verts[i]][j] < min) {
-					base = j;
-					min = matrix[verts[i]][j];
-					e = (vertices[i]->name) + (vertices[j]->name);
+				int value = matrix[verts[i]][j];
+				if(value > 0 && !vertices[j]->latch) {
+					if(value < min) {
+						base = j;
+						min = value;
+						e = (vertices[verts[i]]->name) + (vertices[j]->name);
+					}
 				}
 			}
 		}
 		edge.push_back(eMap[e]);
+		verts.push_back(base);
+		vertices[base]->latch = true;
+		count++;
 	}
 
 	//printing out the graph in format 
@@ -429,21 +432,100 @@ bool Graph::isSubGraph(const Graph& g) {
 	return sub;
 }
 
+void Graph::printPathCloseVal(float value) {
+	paths.clear();
+	tolerance = value;
+	//Collecting subsets whose sums are closest to value.
+	for(int i = 0; i < vCount; ++i) {
+		vector<float> a = values;
+		float partial = a[i];
+		a[i] = -1;
+		vector<int> v(1, i);
+		if(partial == value) {
+			paths.push_back(v);
+			tolerance = 0;
+		} else if(partial < value) {
+			if((value - partial) <= tolerance) { 
+				if((value - partial) < tolerance) {
+					paths.clear();
+					tolerance = (value - partial);
+				}
+				paths.push_back(v);
+			}	
+			setSum(a, v, partial, value, i);
+		} else {
+			if((partial - value) <= tolerance) {
+				if((partial - value) < tolerance) {
+					paths.clear();
+					tolerance = (partial - value);
+				}
+				paths.push_back(v);
+			}	
+		}
+	}
 
-//So this is definitely an NP problem. Could cheat and do calculations else where I suppose; or complete it Heuristically.
-void printPathCloseVal(float value) {
-	/*
-	So here's the problem basically. We have a set of points in which repetition may occur and other restrictions are applied.
-	We have to find a subset(s) of this such that the sum of all values is closest to the provided value.
+	//Checking for repeats or permutations
+	for(int i = 0; i < paths.size(); ++i) {
+		for(int j = 0; j < paths.size(); ++j) {
+			if(j != i) {
+				if(is_permutation(paths[i].begin(), paths[i].end(), paths[j].begin())) {
+					paths[i].clear();
+					paths[i].push_back(-1);
+				}
+			}
+		}		
+	}
 
-	This will typically be a problem in NP, but we may write a heuristic algorithm that will increase this but may be inaccurate.
-	I have emailed her to see if we can even do this.
+	//removing repeats and permutations.
+	vector<vector<int>> print;
+	for(int z = 0; z < paths.size(); ++z) {
+		if(paths[z][0] != -1)
+			print.push_back(paths[z]);
+	}
 
-	And we could also cheat. My idea is to create a heap/tree or a RB tree. And each time an edge/vertex is added we basically recalculate this
-	NP problem. For each path calculated we create a node that holds the path and then insert it into the tree. And then when we call this function we can just
-	search the tree for closest value. Obviously will have to create this whole tree data structure, but honestly not too hard as long as not a RB tree.
+	for(int j = 0; j < print.size(); ++j) {
+		int size = print[j].size();
+		for(int k = 0; k < size; ++k)
+			cout << vertices[print[j][k]]->name << ((k == size - 1) ? "" : " -> ");
+		cout << "\n---" << endl;
+	} 
+}
 
-	I have created a mock one of these nodes in the header.
-
-	*/
+void Graph::setSum(vector<float> subset, vector<int> path, float psum, float value, int prev) {
+	for(int i = 0; i < vCount; ++i) {
+		vector<float> a = subset;
+		vector<int> p = path;
+		if(a[i] != -1 && matrix[prev][i] != 0) {
+			float partial = psum + a[i];
+			a[i] = -1;
+			if(partial == value) {
+				p.push_back(i);
+				if(tolerance != 0)
+					paths.clear();
+				tolerance = 0;
+				paths.push_back(p);
+			} else if(partial > value) {
+				if((partial - value) <= tolerance) {
+					p.push_back(i);
+					if((partial - value) != tolerance) {
+						paths.clear();
+						tolerance = (partial - value);
+					}
+					paths.push_back(p);
+				}
+			} else {
+				if((value - partial) <= tolerance) {
+					p.push_back(i);
+					if((value - partial) != tolerance) {
+						paths.clear();
+						tolerance = (value - partial);
+					}
+					paths.push_back(p);
+				} else {
+					p.push_back(i);
+				}
+				setSum(a, p, partial, value, i);
+			} 
+		}
+	}
 }

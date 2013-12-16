@@ -198,4 +198,7 @@ int main() {
 	//Writing subgraph to file sub.txt
 	h.writeToFile("same.txt");
 	sub.writeToFile("sub.txt");
+
+
+	h.printPathCloseVal(6);
 }
