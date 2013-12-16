@@ -5,7 +5,7 @@ O = Graph
 all: Graph.a Driver.o
 	$C $F -o Graph Driver.o Graph.a
 Graph.o: Graph.cpp Graph.h
-	$C $F -c Graph.cpp
+	$C $F -O22 -c Graph.cpp
 
 Graph.a: Graph.o
 	ar -rcs Graph.a Graph.o
